@@ -76,7 +76,7 @@ def _try_register(name, regular, bold=None, medium=None):
     return name
 
 
-_dm = _try_register('DMSans', 'DMSans-Regular.ttf', bold='DMSans-Bold.ttf')
+_dm = _try_register('DMSans', 'DMSans_18pt-Regular.ttf', bold='DMSans_18pt-Bold.ttf')
 if _dm:
     FONT = _dm
 

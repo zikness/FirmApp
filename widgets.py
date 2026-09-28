@@ -229,6 +229,17 @@ class Pressable(ButtonBehavior):
                   press_scale=self._sync_scale)
         Window.bind(mouse_pos=self._on_mouse)
 
+    def on_parent(self, instance, parent):
+        """Desconecta el listener de Window si el widget sale del arbol.
+
+        Window.bind(mouse_pos=...) mantiene una referencia fuerte a este
+        widget para siempre; sin este unbind, cada tarjeta creada y luego
+        descartada (ej. al recrear contenido dinamico) quedaria colgada en
+        memoria y seguiria recibiendo eventos de mouse.
+        """
+        if parent is None:
+            Window.unbind(mouse_pos=self._on_mouse)
+
     def _sync_scale(self, *a):
         self._scale.origin = (self.center_x, self.center_y, 0)
         self._scale.x = self._scale.y = self.press_scale

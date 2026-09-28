@@ -1,0 +1,21 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Bytecode / cachés de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Empaquetados de fuentes (ya extraídas en assets/fonts/*.ttf)
+*.zip
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs de Kivy
+*.kivy_home/

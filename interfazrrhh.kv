@@ -48,7 +48,7 @@
 # El relleno, el borde y el radio los pinta KivyMD (md_bg_color, line_color,
 # line_width, radius); la sombra difusa la agrega GlassCard en widgets.py.
 # Esta regla tambien alcanza a sus subclases: StatCard, QuickActionCard,
-# HeaderCard, PendingCard, FooterCard, SignatureModal...
+# HeaderCard, PendingCard, FooterCard, SignPanel...
 <GlassCard>:
     md_bg_color: T.C_GLASS
     line_color: T.C_GLASS_BORDER
@@ -636,56 +636,14 @@
             pos_hint: {'center_y': .5}
 
 
-# ========================================================= PANTALLA DE EXITO
-<SuccessContent@MDBoxLayout>:
-    doc_title: ''
-    orientation: 'vertical'
-    size_hint_y: None
-    height: dp(260)
-    spacing: dp(10)
-    MDWidget:
-    MDAnchorLayout:
-        anchor_x: 'center'
-        size_hint_y: None
-        height: dp(64)
-        MDFloatLayout:
-            size_hint: None, None
-            size: dp(64), dp(64)
-            Dot:
-                color: T.C_PRIMARY
-                pos_hint: {'x': 0, 'y': 0}
-                size_hint: 1, 1
-            Icon:
-                name: 'check'
-                color: 1, 1, 1, 1
-                size_hint: None, None
-                size: dp(32), dp(32)
-                pos_hint: {'center_x': .5, 'center_y': .5}
-    Txt:
-        text: '¡Firmado con éxito!'
-        font_size: sp(16)
-        bold: True
-        text_color: T.C_TEXT
-        halign: 'center'
-        text_size: self.width, None
-    Txt:
-        text: '%s ha sido firmado y registrado correctamente.' % root.doc_title
-        font_size: sp(10.5)
-        text_color: T.C_SECONDARY
-        halign: 'center'
-        text_size: self.width, None
-    MDWidget:
-    SolidButton:
-        id: close_btn
-        text: 'Cerrar'
-        md_bg_color: T.C_PRIMARY
-        fg_color: 1, 1, 1, 1
-        height: dp(48)
-        radius: dp(16)
-
-
-# ============================================================ MODAL DE FIRMA
-<SignatureModal>:
+# ============================================================ TARJETA DE FIRMA
+# SignPanel es el "cascaron" de la pantalla de firma (encabezado, pestañas,
+# contenido, boton CTA, disclaimer). Vive DENTRO de SignScreen (una pantalla
+# real del ScreenManager) en vez de flotar sobre un overlay oscuro: por eso
+# ya no necesita separar 'chrome' (cascaron) de 'body' (pantalla de exito)
+# como en la version con modal -- ese cambio de estado ahora es una
+# transicion real de pantalla (ver SuccessScreen mas abajo).
+<SignPanel>:
     orientation: 'vertical'
     size_hint: None, None
     width: dp(348)
@@ -695,105 +653,163 @@
     padding: dp(20), dp(18)
     spacing: dp(12)
     MDBoxLayout:
-        id: chrome
-        orientation: 'vertical'
-        spacing: dp(12)
+        size_hint_y: None
+        height: dp(76)
+        spacing: dp(8)
+        MDBoxLayout:
+            orientation: 'vertical'
+            spacing: dp(4)
+            MDBoxLayout:
+                size_hint_y: None
+                height: dp(21)
+                Pill:
+                    text: root.doc_type
+                    fg_color: T.C_PRIMARY
+                    md_bg_color: T.C_TINT_10
+                MDWidget:
+            Txt:
+                text: root.title
+                font_size: sp(13)
+                bold: True
+                text_color: T.C_TEXT
+            Txt:
+                text: '%s páginas · Vence %s' % (root.pages, root.deadline)
+                font_size: sp(10)
+                text_color: T.C_SECONDARY
+        IconButton:
+            icon_name: 'close'
+            icon_color: T.C_SECONDARY
+            md_bg_color: 0, 0, 0, 0
+            radius: dp(10)
+            size_hint: None, None
+            size: dp(32), dp(32)
+            pos_hint: {'top': 1}
+            on_release: root.close()
+    MDBoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: dp(42)
+        md_bg_color: T.rgba(T.BG, .6)
+        radius: dp(15)
+        padding: dp(4)
+        spacing: dp(4)
+        SolidButton:
+            id: tab_rut
+            text: 'Ingresar RUT'
+            md_bg_color: 1, 1, 1, 1
+            fg_color: T.C_PRIMARY
+            height: dp(34)
+            radius: dp(12)
+            on_release: root.set_tab('rut')
+        SolidButton:
+            id: tab_draw
+            text: 'Dibujar Firma'
+            md_bg_color: 1, 1, 1, 0
+            fg_color: T.C_SECONDARY
+            height: dp(34)
+            radius: dp(12)
+            on_release: root.set_tab('draw')
+    MDBoxLayout:
+        id: content
         size_hint_y: None
         height: self.minimum_height
-        MDBoxLayout:
-            size_hint_y: None
-            height: dp(76)
-            spacing: dp(8)
-            MDBoxLayout:
+    SolidButton:
+        id: cta
+        text: 'Firmar con 1 toque'
+        icon_name: 'pen'
+        md_bg_color: T.C_PRIMARY
+        fg_color: 1, 1, 1, 1
+        height: dp(50)
+        radius: dp(17)
+        on_release: root.sign()
+    Txt:
+        text: 'Al firmar aceptas los términos del documento. Tu firma tiene validez legal.'
+        font_size: sp(9)
+        text_color: T.C_SECONDARY
+        halign: 'center'
+        text_size: self.width, None
+
+
+# ============================================================ PANTALLAS
+# Las 3 pantallas navegables del ScreenManager (ver InterfazRRHHApp.build()
+# en main.py). Cada <XScreen>: es una regla de Kivy Language normal; lo unico
+# que cambia frente a un widget cualquiera es que hereda de kivy.uix.
+# screenmanager.Screen, asi que el ScreenManager puede mostrarla/ocultarla
+# con una transicion animada al cambiar 'sm.current'.
+
+# ------------------------------------------------------------------- INICIO
+# HomeScreen solo envuelve el RootScreen existente (el tablero con las
+# tarjetas de resumen, acciones rapidas, pendientes y liquidaciones) dentro
+# de una Screen real, para que el ScreenManager pueda navegar hacia/desde
+# ella igual que hacia SignScreen y SuccessScreen.
+<HomeScreen>:
+    RootScreen:
+
+
+# =================================================================== FIRMAR
+<SignScreen>:
+    MeshBackground:
+        MDAnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+            SignPanel:
+                id: panel
+
+
+# ========================================================= PANTALLA DE EXITO
+<SuccessScreen>:
+    MeshBackground:
+        MDAnchorLayout:
+            anchor_x: 'center'
+            anchor_y: 'center'
+            GlassCard:
                 orientation: 'vertical'
-                spacing: dp(4)
-                MDBoxLayout:
+                size_hint: None, None
+                width: dp(308)
+                height: self.minimum_height
+                radius: dp(26)
+                md_bg_color: T.C_GLASS_MODAL
+                shadow_strength: 2.6
+                padding: dp(24), dp(26)
+                spacing: dp(14)
+                MDAnchorLayout:
+                    anchor_x: 'center'
                     size_hint_y: None
-                    height: dp(21)
-                    Pill:
-                        text: root.doc_type
-                        fg_color: T.C_PRIMARY
-                        md_bg_color: T.C_TINT_10
-                    MDWidget:
+                    height: dp(64)
+                    MDFloatLayout:
+                        size_hint: None, None
+                        size: dp(64), dp(64)
+                        Dot:
+                            color: T.C_PRIMARY
+                            pos_hint: {'x': 0, 'y': 0}
+                            size_hint: 1, 1
+                        Icon:
+                            name: 'check'
+                            color: 1, 1, 1, 1
+                            size_hint: None, None
+                            size: dp(32), dp(32)
+                            pos_hint: {'center_x': .5, 'center_y': .5}
                 Txt:
-                    text: root.title
-                    font_size: sp(13)
+                    text: '¡Firmado con éxito!'
+                    font_size: sp(16)
                     bold: True
                     text_color: T.C_TEXT
+                    halign: 'center'
+                    text_size: self.width, None
                 Txt:
-                    text: '%s páginas · Vence %s' % (root.pages, root.deadline)
-                    font_size: sp(10)
+                    text: '%s ha sido firmado y registrado correctamente.' % root.doc_title
+                    font_size: sp(10.5)
                     text_color: T.C_SECONDARY
-            IconButton:
-                icon_name: 'close'
-                icon_color: T.C_SECONDARY
-                md_bg_color: 0, 0, 0, 0
-                radius: dp(10)
-                size_hint: None, None
-                size: dp(32), dp(32)
-                pos_hint: {'top': 1}
-                on_release: root.close()
-        MDBoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: None
-            height: dp(42)
-            md_bg_color: T.rgba(T.BG, .6)
-            radius: dp(15)
-            padding: dp(4)
-            spacing: dp(4)
-            SolidButton:
-                id: tab_rut
-                text: 'Ingresar RUT'
-                md_bg_color: 1, 1, 1, 1
-                fg_color: T.C_PRIMARY
-                height: dp(34)
-                radius: dp(12)
-                on_release: root.set_tab('rut')
-            SolidButton:
-                id: tab_draw
-                text: 'Dibujar Firma'
-                md_bg_color: 1, 1, 1, 0
-                fg_color: T.C_SECONDARY
-                height: dp(34)
-                radius: dp(12)
-                on_release: root.set_tab('draw')
-        MDBoxLayout:
-            id: content
-            size_hint_y: None
-            height: self.minimum_height
-        SolidButton:
-            id: cta
-            text: 'Firmar con 1 toque'
-            icon_name: 'pen'
-            md_bg_color: T.C_PRIMARY
-            fg_color: 1, 1, 1, 1
-            height: dp(50)
-            radius: dp(17)
-            on_release: root.sign()
-        Txt:
-            text: 'Al firmar aceptas los términos del documento. Tu firma tiene validez legal.'
-            font_size: sp(9)
-            text_color: T.C_SECONDARY
-            halign: 'center'
-            text_size: self.width, None
-    MDBoxLayout:
-        id: body
-        orientation: 'vertical'
-        size_hint_y: None
-        height: self.minimum_height
-
-
-# ================================================================ OVERLAY
-<ModalOverlay>:
-    canvas.before:
-        Color:
-            rgba: T.rgba(T.TEXT, 0.38)
-        Rectangle:
-            pos: self.pos
-            size: self.size
-    SignatureModal:
-        id: modal
-        pos_hint: {'center_x': .5, 'center_y': .5}
+                    halign: 'center'
+                    text_size: self.width, None
+                SolidButton:
+                    id: close_btn
+                    text: 'Volver al inicio'
+                    md_bg_color: T.C_PRIMARY
+                    fg_color: 1, 1, 1, 1
+                    height: dp(48)
+                    radius: dp(16)
+                    on_release: root.close()
 
 
 # =================================================================== RAIZ

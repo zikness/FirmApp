@@ -1,25 +1,77 @@
-# Interfaz de Recursos Humanos — Kivy + KivyMD
+# FirmApp — Interfaz de Recursos Humanos (Kivy + KivyMD)
 
-Aplicación construida con **Kivy y KivyMD**, siguiendo la arquitectura de la
-**Sesión 12 (KV Language y la separación de la lógica)**: la interfaz visual
-vive completa en un archivo `.kv` y `main.py` solo contiene clases con
+Maqueta funcional construida con **Kivy y KivyMD**, siguiendo la arquitectura
+de la **Sesión 12 (KV Language y la separación de la lógica)**: la interfaz
+visual vive completa en un archivo `.kv` y `main.py` solo contiene clases con
 propiedades y métodos de evento.
 
-El diseño es el del prototipo de Figma, sin cambios. No tiene funcionalidades
-reales: nada se guarda, se envía ni se genera como archivo.
+## Problema que resuelve
+
+En muchas empresas, firmar un documento de RR.HH. (contrato, liquidación de
+sueldo, permiso) obliga al trabajador a imprimir, firmar a mano, escanear y
+reenviar por correo — un proceso lento y que no todos pueden hacer desde el
+celular. FirmApp propone firmar esos documentos desde el teléfono en un solo
+flujo: ver los documentos pendientes, identificarse con el RUT o dibujar la
+firma, y confirmar. Es una **maqueta** (no persiste datos, no valida contra
+un servidor ni tiene validez legal real todavía): su objetivo es probar esa
+experiencia de uso antes de construir el backend.
+
+## Usuario objetivo
+
+Trabajadores de una empresa (área comercial, operaciones, etc.) que reciben
+documentos de RR.HH. para firmar de forma periódica (contratos, liquidaciones
+de sueldo, permisos) y que hoy lo resuelven fuera de la app, muchas veces con
+poca familiaridad con apps corporativas — de ahí que el flujo de firma se
+haya reducido a dos pasos como máximo (RUT o dibujo) y textos cortos y
+directos.
+
+## Capturas de pantalla
+
+| Inicio | Firmar — RUT | Firmar — Dibujo | Éxito |
+|---|---|---|---|
+| ![Inicio](assets/screenshots/01_inicio.png) | ![Firmar con RUT](assets/screenshots/02_firmar_rut.png) | ![Dibujar firma](assets/screenshots/03_firmar_dibujo.png) | ![Firmado con éxito](assets/screenshots/04_exito.png) |
+
+## Declaración de uso de IA
+
+Se usó IA (Claude / Claude Code) para analizar el proyecto, corregir errores
+y adaptar la estructura a los requisitos de la evaluación (navegación con
+`ScreenManager`, orden del repositorio). El detalle completo — qué se pidió,
+qué se cambió y por qué — está documentado en [`uso_ia.md`](uso_ia.md).
 
 ## 1. Estructura de archivos
 
 ```
-InterfazRRHH/
+FirmApp/
 ├── main.py               <- SOLO clases y lógica (hereda de MDApp)
+│                             ScreenManager + 3 pantallas: Inicio, Firmar, Éxito
 ├── interfazrrhh.kv       <- TODO el diseño visual (componentes KivyMD)
 ├── widgets.py            <- Clases base sobre MDBoxLayout / MDCard / MDTextField
 ├── icons.py              <- Los iconos SVG del diseño, redibujados para Kivy
 ├── theme.py              <- Colores y tipografías
 ├── requirements.txt
-└── assets/fonts/         <- (opcional) DMSans-Regular.ttf, etc.
+├── uso_ia.md             <- Declaración de uso de IA (este proyecto)
+└── assets/
+    ├── fonts/             <- DMSans_18pt-{Regular,Bold}.ttf, JetBrainsMono-Regular.ttf
+    └── screenshots/        <- Capturas usadas en este README
 ```
+
+## Navegación (ScreenManager)
+
+La maqueta original no tenía `ScreenManager`: era una sola pantalla con un
+modal superpuesto. Se reestructuró a 3 pantallas navegables, tal como exige
+la evaluación:
+
+1. **`home`** (`HomeScreen`) — tablero: saludo, estadísticas, acciones
+   rápidas, tareas pendientes y liquidaciones recientes.
+2. **`sign`** (`SignScreen`) — tarjeta de firma con dos pestañas (RUT /
+   Dibujar) para el documento elegido en Inicio.
+3. **`success`** (`SuccessScreen`) — confirmación de firma, con botón para
+   volver a Inicio.
+
+`InterfazRRHHApp.build()` crea las 3 pantallas una sola vez dentro de un
+`ScreenManager` y la navegación (`go_to_sign`, `go_to_success`, `go_home`)
+solo cambia `sm.current` con una transición (`SlideTransition`) — no crea ni
+destruye widgets en cada viaje, a diferencia del modal original.
 
 ## 2. Instalación en Visual Studio Code
 
@@ -51,7 +103,7 @@ InterfazRRHH/
 |---|---|
 | `MDApp` | `InterfazRRHHApp`, con `theme_cls` configurado a la paleta del diseño |
 | `MDBoxLayout` | Base de `GlassCard`, `Pill`, `DocRow`, `SectionLabel` y de todos los contenedores del `.kv` |
-| `MDFloatLayout` | Base de `MeshBackground`, `GradientTile`, `IconTile`, `IconButton`, `ModalOverlay` |
+| `MDFloatLayout` | Base de `MeshBackground`, `GradientTile`, `IconTile`, `IconButton` |
 | `MDGridLayout` | Rejillas de estadísticas y de Acciones Rápidas |
 | `MDAnchorLayout` | Centrado dentro del lienzo de firma y de la pantalla de éxito |
 | `MDScrollView` | Scroll de la pantalla principal |
@@ -59,6 +111,10 @@ InterfazRRHH/
 | `MDCard` | Base de `SolidButton` (superficie Material con `md_bg_color`, `radius`, `elevation`) |
 | `MDTextField` | Base de `RutInput`, el campo del RUT |
 | `MDWidget` | Base de `Icon`, `Dot`, `Divider` y de los espaciadores |
+
+> `ScreenManager` / `Screen` (`kivy.uix.screenmanager`) no son de KivyMD sino
+> de Kivy base; se usan para la navegación entre `HomeScreen`, `SignScreen` y
+> `SuccessScreen` (ver sección "Navegación").
 
 Las superficies se pintan con las propiedades nativas de KivyMD
 `md_bg_color`, `radius`, `line_color` y `line_width` — heredadas de
@@ -73,7 +129,7 @@ Las superficies se pintan con las propiedades nativas de KivyMD
 | **Anatomía de un archivo .kv** | Cada componente tiene su regla `<NombreClase>:` con indentación de 4 espacios. |
 | **Integrando componentes de KivyMD** | Ver la tabla de la sección 3. Igual que `<FormularioAS@MDBoxLayout>` del ejemplo. |
 | **El motor lógico en Python** | `class InterfazRRHHApp(MDApp)` con `def build(self)`, igual que `FormularioApp(MDApp)`. |
-| **IDs: el puente de la vista a la lógica** | El modal usa `self.ids.rut_input`, `self.ids.cta`, `self.ids.tab_rut`… |
+| **IDs: el puente de la vista a la lógica** | `SignPanel` usa `self.ids.rut_input`, `self.ids.cta`, `self.ids.tab_rut`… |
 | **Eventos: respondiendo con `root`** | `on_release: root.sign_pressed()`, `on_release: root.set_tab('rut')`, `on_release: root.sign()`. |
 | **Refactorización: de spaghetti a arquitectura** | No queda ningún `add_widget()` encadenado para construir la interfaz. |
 
@@ -89,7 +145,7 @@ solo la alimenta con datos. Todo el resto vive en `interfazrrhh.kv`.
 
 - Animación de entrada escalonada de las tarjetas.
 - Pulsado (escala 0.96) y hover (escala 1.02) en tarjetas y botones.
-- Abrir el modal desde "Firmar con 1 toque" o desde la barra inferior.
+- Navegar a la pantalla **Firmar** desde "Firmar con 1 toque" o desde la barra inferior.
 - Pestaña **Ingresar RUT**: formato automático `12.345.678-9` y validación visual.
 - Pestaña **Dibujar Firma**: lienzo táctil y botón Limpiar.
 - Pantalla **¡Firmado con éxito!**.
