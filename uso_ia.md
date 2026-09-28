@@ -39,6 +39,12 @@ aplica)".
    el estudiante redactó con su propia investigación, y actualizar
    `README.md` y este archivo para reflejarlo (ver sección "Actualización —
    `FUNDAMENTACION-UX-UI.md`" más abajo).
+5. **"Ajusta el texto del documento y describe lo que sí hace. En caso de
+   que veas otra inconsistencia realiza los cambios necesarios"** —
+   corrección de la matriz hallazgo → decisión y de la sección 4 para que
+   nombren las pantallas y componentes reales del código (`HomeScreen`,
+   `SignScreen`, `SuccessScreen`, `SolidButton`/`MDCard`), sin alterar
+   ningún dato de la investigación del estudiante.
 
 ## Qué encontró el análisis inicial
 
@@ -133,25 +139,35 @@ entregó (`git add` + commit) y actualizó las referencias cruzadas en
 `README.md` (sección "Fundamentación UX/UI" y estructura de archivos) para
 enlazarlo.
 
-Al incorporarlo se detectó una inconsistencia que **no se corrigió
-automáticamente** (por no alterar el contenido del estudiante sin
-pedírselo): la matriz hallazgo → decisión (sección 3) y la justificación de
-navegación (sección 4) del documento nombran pantallas `PantallaInicio`,
-`PantallaFormulario` y `PantallaEstado`, pero las clases reales en
-`main.py`/`interfazrrhh.kv` se llaman `HomeScreen`, `SignScreen` y
-`SuccessScreen`. Además, `PantallaFormulario` describe un formulario de
-solicitud de permisos/vacaciones (hallazgo H4) que **no está implementado**
-todavía como pantalla navegable — las tarjetas "Pedir Vacaciones" y
-"Solicitar Permiso" del dashboard hoy no tienen acción asociada. Queda a
-criterio del estudiante ajustar los nombres de pantalla en el documento
-para que coincidan con el código, o implementar esa pantalla de
-formulario, antes de presentar (el criterio A3 de la rúbrica exige que la
-matriz trace decisiones reales del código).
+Al incorporarlo se detectó una inconsistencia entre el documento y el
+código: la matriz hallazgo → decisión (sección 3) y la justificación de
+navegación (sección 4) nombraban pantallas `PantallaInicio`,
+`PantallaFormulario` y `PantallaEstado`, que no existen — las clases reales
+en `main.py`/`interfazrrhh.kv` son `HomeScreen`, `SignScreen` y
+`SuccessScreen`. Además, `PantallaFormulario` describía un formulario de
+solicitud de permisos/vacaciones que no está implementado como pantalla
+navegable (las tarjetas "Pedir Vacaciones" y "Solicitar Permiso" del
+Dashboard hoy no tienen acción asociada).
+
+**A pedido explícito del estudiante** ("ajusta el texto del documento y
+describe lo que sí hace"), la IA reescribió las filas H1, H4 y H5 de la
+matriz, la sección 4 completa (con los nombres reales de pantalla y el
+flujo Inicio → Firmar → Éxito) y la mención de `MDButton`/`MDCard` de la
+sección 5 (la app usa `SolidButton`/`PressCard` sobre `MDCard`, no
+`MDButton`) — **sin tocar ningún dato de la investigación** (porcentajes,
+recuentos, ficha técnica de la muestra, hallazgos 1–5 de la sección 2):
+solo se reescribió cómo se describe la implementación en Kivy/KivyMD, para
+que trace decisiones que sí existen en el código. Se agregó además una nota
+explícita en la matriz (bajo H4) aclarando que el formulario de
+permisos/vacaciones aún no está implementado y por qué, en vez de fingir
+que existe.
 
 ## Qué revisó la IA de la rúbrica y no alcanzó a resolver
 
-- Criterio A (Fundamentación UX/UI, 30 pts): el documento ya existe y fue
-  incorporado; ver la nota de inconsistencia de nombres de pantalla arriba.
+- Criterio A (Fundamentación UX/UI, 30 pts): documento presente y ya
+  alineado con el código (ver actualización arriba). La investigación en sí
+  (metodología, hallazgos, cifras) es responsabilidad del estudiante; la IA
+  no la generó ni la alteró.
 - Criterio D (presentación oral, 15 pts): no aplica a un cambio de código;
   es responsabilidad del estudiante al exponer.
 
