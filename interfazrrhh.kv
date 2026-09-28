@@ -1,0 +1,935 @@
+#:kivy 2.3.1
+# archivo: interfazrrhh.kv
+# ---------------------------------------------------------------------------
+# Sesion 12 - "KV Language y la separacion de la logica".
+# Este archivo es la capa de DISENO/UI. No contiene logica de negocio:
+# solo estructura visual, colores y tamanos. Se carga solo porque la clase
+# de la app se llama InterfazRRHHApp (ver "Magia pura: la carga automatica").
+# ---------------------------------------------------------------------------
+#:import T theme
+#:import dp kivy.metrics.dp
+#:import sp kivy.metrics.sp
+
+
+# ============================================================ CLASES DINAMICAS
+# Dos variantes de MDLabel (el componente de texto de KivyMD).
+# theme_text_color: 'Custom' desactiva el color automatico del tema Material
+# para poder usar los colores exactos del diseno de Figma.
+
+# Bloque de texto que ajusta su alto al contenido.
+<Txt@MDLabel>:
+    font_name: T.FONT
+    theme_text_color: 'Custom'
+    text_color: T.C_TEXT
+    # Sin esto, un MDLabel dentro de un widget deshabilitado se pinta con
+    # disabled_color del tema Material y pierde el color del diseno.
+    disabled_color: self.text_color
+    size_hint_y: None
+    text_size: self.width, None
+    height: self.texture_size[1] if self.text else dp(1)
+    halign: 'left'
+    valign: 'top'
+
+
+# Etiqueta centrada, para textos de una sola linea.
+# Las que deben medir exactamente lo que mide su texto agregan
+# "adaptive_width: True", la propiedad de KivyMD para ese ajuste.
+<TxtFijo@MDLabel>:
+    font_name: T.FONT
+    theme_text_color: 'Custom'
+    text_color: T.C_TEXT
+    disabled_color: self.text_color
+    halign: 'center'
+    valign: 'middle'
+
+
+# ============================================================== TARJETA GLASS
+# Valores por defecto del efecto "vidrio" del diseno de Figma.
+# El relleno, el borde y el radio los pinta KivyMD (md_bg_color, line_color,
+# line_width, radius); la sombra difusa la agrega GlassCard en widgets.py.
+# Esta regla tambien alcanza a sus subclases: StatCard, QuickActionCard,
+# HeaderCard, PendingCard, FooterCard, SignatureModal...
+<GlassCard>:
+    md_bg_color: T.C_GLASS
+    line_color: T.C_GLASS_BORDER
+    line_width: 1.1
+    radius: dp(24)
+
+
+# =================================================================== PILDORA
+<Pill>:
+    size_hint: None, None
+    height: dp(21)
+    radius: self.height / 2
+    padding: dp(10), 0
+    spacing: dp(4)
+    width: (icn.width if root.icon_name else 0) + lbl.texture_size[0] + dp(20)
+    Icon:
+        id: icn
+        name: root.icon_name
+        color: root.fg_color
+        size_hint: None, None
+        size: (dp(12), dp(12)) if root.icon_name else (0, 0)
+        pos_hint: {'center_y': .5}
+    TxtFijo:
+        id: lbl
+        text: root.text
+        font_name: T.FONT
+        font_size: sp(10.5)
+        bold: True
+        text_color: root.fg_color
+        adaptive_width: True
+        size_hint_y: 1
+
+
+# =============================================================== ICON TILE
+# El fondo y el radio los pinta KivyMD con md_bg_color / radius; dentro solo
+# va el icono vectorial del diseno.
+<IconTile>:
+    Icon:
+        name: root.icon_name
+        color: root.icon_color
+        size_hint: None, None
+        size: self.parent.width * 0.46, self.parent.height * 0.46
+        pos_hint: {'center_x': .5, 'center_y': .5}
+
+
+<IconButton>:
+    Icon:
+        name: root.icon_name
+        color: root.icon_color
+        size_hint: None, None
+        size: self.parent.width * 0.48, self.parent.height * 0.48
+        pos_hint: {'center_x': .5, 'center_y': .5}
+
+
+# ==================================================================== BOTON
+<SolidButton>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(44)
+    radius: dp(16)
+    spacing: dp(8)
+    MDWidget:
+    Icon:
+        name: root.icon_name
+        color: root.fg_color
+        size_hint: None, 1
+        width: dp(17) if root.icon_name else 0
+        pos_hint: {'center_y': .5}
+    TxtFijo:
+        text: root.text
+        font_name: T.FONT
+        font_size: sp(13)
+        bold: True
+        text_color: root.fg_color
+        adaptive_width: True
+        size_hint_y: 1
+    MDWidget:
+
+
+# =============================================================== ESTADISTICA
+<StatCard>:
+    orientation: 'vertical'
+    radius: dp(16)
+    padding: dp(4), dp(10)
+    spacing: dp(1)
+    MDWidget:
+    Txt:
+        text: root.value
+        font_size: sp(19)
+        bold: True
+        text_color: T.C_PRIMARY
+        halign: 'center'
+    Txt:
+        text: root.sub
+        font_size: sp(9.5)
+        text_color: T.C_SECONDARY
+        halign: 'center'
+    MDWidget:
+
+
+# ============================================================ ACCION RAPIDA
+<QuickActionCard>:
+    orientation: 'vertical'
+    radius: dp(22)
+    padding: dp(12), dp(13)
+    spacing: dp(6)
+    MDFloatLayout:
+        size_hint: None, None
+        size: dp(44), dp(44)
+        GradientTile:
+            pos_hint: {'x': 0, 'y': 0}
+            size_hint: 1, 1
+            tile_radius: dp(15)
+            c1: root.c1
+            c2: root.c2
+        Icon:
+            name: root.icon_name
+            color: 1, 1, 1, 1
+            size_hint: None, None
+            size: dp(24), dp(24)
+            pos_hint: {'center_x': .5, 'center_y': .5}
+    Txt:
+        text: root.label_text
+        font_size: sp(11.5)
+        bold: True
+        text_color: T.C_TEXT
+    Txt:
+        text: root.sub_text
+        font_size: sp(9.5)
+        text_color: T.C_SECONDARY
+    MDWidget:
+
+
+# ============================================================ SECCION LABEL
+<SectionLabel>:
+    size_hint_y: None
+    height: dp(24)
+    padding: dp(4), 0
+    spacing: dp(6)
+    TxtFijo:
+        text: root.title
+        font_name: T.FONT
+        font_size: sp(11.5)
+        bold: True
+        text_color: T.C_TEXT
+        adaptive_width: True
+    MDWidget:
+    MDFloatLayout:
+        size_hint: None, None
+        size: (dp(20), dp(20)) if root.count >= 0 else (0, 0)
+        opacity: 1 if root.count >= 0 else 0
+        MDBoxLayout:
+            pos_hint: {'x': 0, 'y': 0}
+            size_hint: 1, 1
+            md_bg_color: T.C_TINT_10
+            radius: dp(10)
+        TxtFijo:
+            text: str(root.count)
+            font_name: T.FONT
+            font_size: sp(10)
+            bold: True
+            text_color: T.C_PRIMARY
+            pos_hint: {'center_x': .5, 'center_y': .5}
+
+
+# =================================================================== HEADER
+<HeaderCard>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(92)
+    radius: dp(24)
+    padding: dp(18), dp(14)
+    spacing: dp(10)
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+        MDWidget:
+        Txt:
+            text: root.greeting
+            font_size: sp(11)
+            bold: True
+            text_color: T.C_SECONDARY
+        Txt:
+            text: 'Valentina Soto'
+            font_size: sp(17.5)
+            bold: True
+            text_color: T.C_TEXT
+        Txt:
+            text: 'Área Comercial · Jornada Completa'
+            font_size: sp(10.5)
+            text_color: T.C_SECONDARY
+        MDWidget:
+    MDBoxLayout:
+        size_hint_x: None
+        width: dp(92)
+        spacing: dp(10)
+        MDFloatLayout:
+            size_hint_x: None
+            width: dp(40)
+            IconButton:
+                icon_name: 'bell'
+                icon_color: T.C_PRIMARY
+                md_bg_color: T.C_TINT_10
+                radius: dp(13)
+                size_hint: None, None
+                size: dp(40), dp(40)
+                pos_hint: {'x': 0, 'center_y': .5}
+            Dot:
+                color: T.rgba(T.ORANGE_DOT)
+                ring: True
+                size_hint: None, None
+                size: dp(9), dp(9)
+                pos_hint: {'center_x': .76, 'center_y': .78}
+        MDFloatLayout:
+            size_hint_x: None
+            width: dp(40)
+            GradientTile:
+                size_hint: None, None
+                size: dp(40), dp(40)
+                tile_radius: dp(13)
+                c1: T.C_PRIMARY
+                c2: T.C_PRIMARY_DARK
+                pos_hint: {'x': 0, 'center_y': .5}
+                TxtFijo:
+                    text: 'VS'
+                    font_name: T.FONT
+                    bold: True
+                    font_size: sp(13)
+                    text_color: 1, 1, 1, 1
+                    pos_hint: {'center_x': .5, 'center_y': .5}
+
+
+# ============================================================ TAREA PENDIENTE
+<PendingCard>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height
+    radius: dp(22)
+    padding: dp(16)
+    spacing: dp(12)
+    MDBoxLayout:
+        size_hint_y: None
+        height: dp(76)
+        spacing: dp(10)
+        MDBoxLayout:
+            orientation: 'vertical'
+            spacing: dp(4)
+            MDBoxLayout:
+                size_hint_y: None
+                height: dp(21)
+                spacing: dp(6)
+                Pill:
+                    text: root.doc_type
+                    fg_color: T.C_PRIMARY
+                    md_bg_color: T.C_TINT_10
+                MDBoxLayout:
+                    size_hint_x: None
+                    width: (urgent_pill.width + dp(6)) if root.urgent else 0
+                    opacity: 1 if root.urgent else 0
+                    Pill:
+                        id: urgent_pill
+                        text: 'Urgente'
+                        fg_color: T.rgba(T.ORANGE)
+                        md_bg_color: T.rgba(T.ORANGE_BG)
+                MDWidget:
+            Txt:
+                text: root.title
+                font_size: sp(12.5)
+                bold: True
+                text_color: T.C_TEXT
+            Txt:
+                text: 'Vence: %s · %s páginas' % (root.deadline, root.pages)
+                font_size: sp(10)
+                text_color: T.C_SECONDARY
+        IconTile:
+            size_hint: None, None
+            size: dp(40), dp(40)
+            icon_name: 'file'
+            icon_color: T.C_PRIMARY
+            md_bg_color: T.C_BG
+            radius: dp(14)
+    SolidButton:
+        text: 'Firmar con 1 toque'
+        icon_name: 'pen'
+        md_bg_color: T.C_PRIMARY
+        fg_color: 1, 1, 1, 1
+        height: dp(44)
+        radius: dp(16)
+        on_release: root.sign_pressed()
+
+
+# =================================================================== FILA DOC
+<DocRow>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(55)
+    padding: dp(6), dp(8)
+    spacing: dp(10)
+    radius: dp(12)
+    md_bg_color: 0, 0, 0, 0
+    IconTile:
+        size_hint: None, None
+        size: dp(34), dp(34)
+        icon_name: 'file'
+        icon_color: T.C_PRIMARY
+        md_bg_color: T.C_TINT_10
+        radius: dp(11)
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+        MDWidget:
+        Txt:
+            text: root.name
+            font_size: sp(12)
+            bold: True
+            text_color: T.C_TEXT
+        Txt:
+            text: '%s · %s' % (root.date, root.filesize)
+            font_size: sp(10)
+            text_color: T.C_SECONDARY
+        MDWidget:
+    MDBoxLayout:
+        size_hint_x: None
+        width: dp(74)
+        spacing: dp(6)
+        MDBoxLayout:
+            size_hint_x: None
+            width: offline_pill.width if root.offline else 0
+            opacity: 1 if root.offline else 0
+            Pill:
+                id: offline_pill
+                icon_name: 'check'
+                text: ''
+                fg_color: T.rgba(T.EMERALD)
+                md_bg_color: T.rgba(T.EMERALD_BG)
+                line_color: T.rgba(T.EMERALD_BORDER, .7)
+                line_width: 1.4
+        Icon:
+            name: 'chevron'
+            color: T.C_SECONDARY
+            size_hint: None, None
+            size: dp(15), dp(15)
+            pos_hint: {'center_y': .5}
+    Divider:
+        pos_hint: {'x': 0, 'y': 0}
+        size_hint: 1, None
+        height: dp(1)
+        opacity: 0 if root.last else 1
+        color: T.C_DIVIDER
+
+
+# =============================================================== BARRA INFERIOR
+<FooterCard>:
+    orientation: 'horizontal'
+    radius: dp(18)
+    padding: dp(14), dp(10)
+    spacing: dp(10)
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+        MDWidget:
+        Txt:
+            text: 'Firma sin iniciar sesión'
+            font_size: sp(11.5)
+            bold: True
+            text_color: T.C_TEXT
+        Txt:
+            text: 'Solo necesitas tu RUT'
+            font_size: sp(9.5)
+            text_color: T.C_SECONDARY
+        MDWidget:
+    SolidButton:
+        text: 'Firmar'
+        icon_name: 'pen'
+        md_bg_color: T.C_PRIMARY
+        fg_color: 1, 1, 1, 1
+        size_hint_x: None
+        width: dp(104)
+        height: dp(40)
+        radius: dp(13)
+        on_release: root.sign_pressed()
+
+
+# =========================================================== CTA ESCRITORIO
+<DesktopCtaCard>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(84)
+    radius: dp(22)
+    padding: dp(16)
+    spacing: dp(10)
+    md_bg_color: T.C_GLASS_DARK
+    line_color: 1, 1, 1, 0.28
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(2)
+        MDWidget:
+        Txt:
+            text: '¿No iniciaste sesión?'
+            font_size: sp(12.5)
+            bold: True
+            text_color: T.C_TEXT
+        Txt:
+            text: 'Puedes firmar documentos ingresando solo tu RUT'
+            font_size: sp(10)
+            text_color: T.C_SECONDARY
+        MDWidget:
+    SolidButton:
+        text: 'Firmar sin sesión'
+        icon_name: 'pen'
+        md_bg_color: T.C_PRIMARY
+        fg_color: 1, 1, 1, 1
+        size_hint_x: None
+        width: dp(150)
+        height: dp(44)
+        radius: dp(15)
+        on_release: root.sign_pressed()
+
+
+# ================================================== CONTENIDO PESTAÑA: RUT
+<RutTabContent@MDBoxLayout>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height
+    spacing: dp(6)
+    Txt:
+        text: 'RUT DEL TRABAJADOR'
+        font_size: sp(9.5)
+        bold: True
+        text_color: T.C_SECONDARY
+    MDFloatLayout:
+        size_hint_y: None
+        height: dp(62)
+        MDBoxLayout:
+            id: field
+            pos_hint: {'x': 0, 'y': 0}
+            size_hint: 1, 1
+            md_bg_color: 1, 1, 1, .7
+            line_color: T.C_BG
+            line_width: 1.8
+            radius: dp(16)
+            padding: dp(12), dp(4)
+            MDFloatLayout:
+                # Marcador de posicion propio: MDTextField sube su hint_text
+                # al borde al escribir (animacion Material), y el diseno de
+                # Figma lo muestra centrado y fijo. Por eso el hint va aparte.
+                TxtFijo:
+                    text: '12.345.678-9'
+                    font_name: T.FONT_MONO
+                    font_size: sp(21)
+                    text_color: T.rgba(T.SECONDARY, .5)
+                    opacity: 0 if rut_input.text else 1
+                    pos_hint: {'x': 0, 'y': 0}
+                    size_hint: 1, 1
+                RutInput:
+                    id: rut_input
+                    pos_hint: {'x': 0, 'y': 0}
+                    size_hint: 1, 1
+                    # Se apagan los adornos de Material Design (subrayado,
+                    # relleno y borde) para respetar el recuadro redondeado
+                    # del diseno. El modo 'round' es el unico que no dibuja
+                    # la linea inferior caracteristica de Material.
+                    mode: 'round'
+                    line_color_normal: 0, 0, 0, 0
+                    line_color_focus: 0, 0, 0, 0
+                    fill_color_normal: 0, 0, 0, 0
+                    fill_color_focus: 0, 0, 0, 0
+                    foreground_color: T.C_TEXT
+                    text_color_normal: T.C_TEXT
+                    text_color_focus: T.C_TEXT
+                    cursor_color: T.C_PRIMARY
+                    font_name: T.FONT_MONO
+                    font_size: sp(21)
+                    multiline: False
+                    halign: 'center'
+                    padding: dp(12), dp(16)
+        MDFloatLayout:
+            id: check
+            opacity: 0
+            size_hint: None, None
+            size: dp(26), dp(26)
+            pos_hint: {'right': .94, 'center_y': .5}
+            Dot:
+                color: T.C_PRIMARY
+                pos_hint: {'x': 0, 'y': 0}
+                size_hint: 1, 1
+            Icon:
+                name: 'check'
+                color: 1, 1, 1, 1
+                size_hint: None, None
+                size: dp(14), dp(14)
+                pos_hint: {'center_x': .5, 'center_y': .5}
+    Txt:
+        text: 'Ingresa tu RUT para verificar tu identidad'
+        font_size: sp(9.5)
+        text_color: T.C_SECONDARY
+        halign: 'center'
+        text_size: self.width, None
+
+
+# =============================================== CONTENIDO PESTAÑA: DIBUJAR
+<DrawTabContent@MDBoxLayout>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height
+    spacing: dp(6)
+    MDBoxLayout:
+        size_hint_y: None
+        height: dp(20)
+        Txt:
+            text: 'DIBUJA TU FIRMA AQUÍ'
+            font_size: sp(9.5)
+            bold: True
+            text_color: T.C_SECONDARY
+        MDWidget:
+        SolidButton:
+            id: clear_btn
+            text: 'Limpiar'
+            icon_name: 'trash'
+            md_bg_color: 0, 0, 0, 0
+            fg_color: T.C_SECONDARY
+            size_hint_x: None
+            width: dp(80)
+            height: dp(20)
+            radius: dp(8)
+            opacity: 0
+            disabled: True
+    DashedPanel:
+        # MDBoxLayout con borde punteado: KivyMD pinta el relleno con
+        # md_bg_color y el punteado lo agrega DashedPanel (widgets.py),
+        # porque line_color de Material solo traza lineas continuas.
+        size_hint_y: None
+        height: dp(150)
+        md_bg_color: 1, 1, 1, .6
+        dash_color: T.rgba(T.PRIMARY, .35)
+        dash_width: 1.6
+        radius: dp(16)
+        MDFloatLayout:
+            SignaturePad:
+                id: pad
+                pos_hint: {'x': 0, 'y': 0}
+                size_hint: 1, 1
+            MDBoxLayout:
+                id: hint
+                orientation: 'vertical'
+                spacing: dp(4)
+                size_hint: 1, None
+                height: dp(46)
+                pos_hint: {'center_x': .5, 'center_y': .5}
+                MDWidget:
+                MDAnchorLayout:
+                    anchor_x: 'center'
+                    size_hint_y: None
+                    height: dp(22)
+                    Icon:
+                        name: 'pen'
+                        color: T.rgba(T.SECONDARY, .8)
+                        size_hint: None, None
+                        size: dp(22), dp(22)
+                Txt:
+                    text: 'Traza tu firma en este espacio'
+                    font_size: sp(9.5)
+                    text_color: T.C_SECONDARY
+                    halign: 'center'
+                    text_size: self.width, None
+                MDWidget:
+    MDBoxLayout:
+        size_hint_y: None
+        height: dp(14)
+        spacing: dp(6)
+        Divider:
+            size_hint_y: None
+            height: dp(1)
+            pos_hint: {'center_y': .5}
+        Txt:
+            text: 'firma con valor legal'
+            font_size: sp(8.5)
+            text_color: T.C_SECONDARY
+            halign: 'center'
+            size_hint_x: None
+            width: dp(110)
+        Divider:
+            size_hint_y: None
+            height: dp(1)
+            pos_hint: {'center_y': .5}
+
+
+# ========================================================= PANTALLA DE EXITO
+<SuccessContent@MDBoxLayout>:
+    doc_title: ''
+    orientation: 'vertical'
+    size_hint_y: None
+    height: dp(260)
+    spacing: dp(10)
+    MDWidget:
+    MDAnchorLayout:
+        anchor_x: 'center'
+        size_hint_y: None
+        height: dp(64)
+        MDFloatLayout:
+            size_hint: None, None
+            size: dp(64), dp(64)
+            Dot:
+                color: T.C_PRIMARY
+                pos_hint: {'x': 0, 'y': 0}
+                size_hint: 1, 1
+            Icon:
+                name: 'check'
+                color: 1, 1, 1, 1
+                size_hint: None, None
+                size: dp(32), dp(32)
+                pos_hint: {'center_x': .5, 'center_y': .5}
+    Txt:
+        text: '¡Firmado con éxito!'
+        font_size: sp(16)
+        bold: True
+        text_color: T.C_TEXT
+        halign: 'center'
+        text_size: self.width, None
+    Txt:
+        text: '%s ha sido firmado y registrado correctamente.' % root.doc_title
+        font_size: sp(10.5)
+        text_color: T.C_SECONDARY
+        halign: 'center'
+        text_size: self.width, None
+    MDWidget:
+    SolidButton:
+        id: close_btn
+        text: 'Cerrar'
+        md_bg_color: T.C_PRIMARY
+        fg_color: 1, 1, 1, 1
+        height: dp(48)
+        radius: dp(16)
+
+
+# ============================================================ MODAL DE FIRMA
+<SignatureModal>:
+    orientation: 'vertical'
+    size_hint: None, None
+    width: dp(348)
+    radius: dp(26)
+    md_bg_color: T.C_GLASS_MODAL
+    shadow_strength: 2.6
+    padding: dp(20), dp(18)
+    spacing: dp(12)
+    MDBoxLayout:
+        id: chrome
+        orientation: 'vertical'
+        spacing: dp(12)
+        size_hint_y: None
+        height: self.minimum_height
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(76)
+            spacing: dp(8)
+            MDBoxLayout:
+                orientation: 'vertical'
+                spacing: dp(4)
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: dp(21)
+                    Pill:
+                        text: root.doc_type
+                        fg_color: T.C_PRIMARY
+                        md_bg_color: T.C_TINT_10
+                    MDWidget:
+                Txt:
+                    text: root.title
+                    font_size: sp(13)
+                    bold: True
+                    text_color: T.C_TEXT
+                Txt:
+                    text: '%s páginas · Vence %s' % (root.pages, root.deadline)
+                    font_size: sp(10)
+                    text_color: T.C_SECONDARY
+            IconButton:
+                icon_name: 'close'
+                icon_color: T.C_SECONDARY
+                md_bg_color: 0, 0, 0, 0
+                radius: dp(10)
+                size_hint: None, None
+                size: dp(32), dp(32)
+                pos_hint: {'top': 1}
+                on_release: root.close()
+        MDBoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: None
+            height: dp(42)
+            md_bg_color: T.rgba(T.BG, .6)
+            radius: dp(15)
+            padding: dp(4)
+            spacing: dp(4)
+            SolidButton:
+                id: tab_rut
+                text: 'Ingresar RUT'
+                md_bg_color: 1, 1, 1, 1
+                fg_color: T.C_PRIMARY
+                height: dp(34)
+                radius: dp(12)
+                on_release: root.set_tab('rut')
+            SolidButton:
+                id: tab_draw
+                text: 'Dibujar Firma'
+                md_bg_color: 1, 1, 1, 0
+                fg_color: T.C_SECONDARY
+                height: dp(34)
+                radius: dp(12)
+                on_release: root.set_tab('draw')
+        MDBoxLayout:
+            id: content
+            size_hint_y: None
+            height: self.minimum_height
+        SolidButton:
+            id: cta
+            text: 'Firmar con 1 toque'
+            icon_name: 'pen'
+            md_bg_color: T.C_PRIMARY
+            fg_color: 1, 1, 1, 1
+            height: dp(50)
+            radius: dp(17)
+            on_release: root.sign()
+        Txt:
+            text: 'Al firmar aceptas los términos del documento. Tu firma tiene validez legal.'
+            font_size: sp(9)
+            text_color: T.C_SECONDARY
+            halign: 'center'
+            text_size: self.width, None
+    MDBoxLayout:
+        id: body
+        orientation: 'vertical'
+        size_hint_y: None
+        height: self.minimum_height
+
+
+# ================================================================ OVERLAY
+<ModalOverlay>:
+    canvas.before:
+        Color:
+            rgba: T.rgba(T.TEXT, 0.38)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    SignatureModal:
+        id: modal
+        pos_hint: {'center_x': .5, 'center_y': .5}
+
+
+# =================================================================== RAIZ
+<RootScreen>:
+    MDScrollView:
+        bar_width: dp(3)
+        scroll_type: ['bars', 'content']
+        bar_color: T.rgba(T.PRIMARY, .25)
+        bar_inactive_color: 0, 0, 0, 0
+        MDBoxLayout:
+            id: col
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            padding: dp(16), dp(28), dp(16), dp(104)
+            spacing: dp(14)
+
+            HeaderCard:
+
+            MDGridLayout:
+                cols: 3
+                spacing: dp(10)
+                size_hint_y: None
+                height: dp(64)
+                StatCard:
+                    value: '18'
+                    sub: 'Sep 2026'
+                StatCard:
+                    value: '12'
+                    sub: 'días'
+                StatCard:
+                    value: '2'
+                    sub: 'sin firma'
+
+            SectionLabel:
+                title: 'ACCIONES RÁPIDAS'
+
+            MDGridLayout:
+                cols: 3
+                spacing: dp(10)
+                size_hint_y: None
+                height: dp(148)
+                QuickActionCard:
+                    icon_name: 'vacation'
+                    label_text: 'Pedir Vacaciones'
+                    sub_text: 'Solicita días libres'
+                    c1: T.C_PRIMARY
+                    c2: T.C_PRIMARY_DARK
+                QuickActionCard:
+                    icon_name: 'permit'
+                    label_text: 'Solicitar Permiso'
+                    sub_text: 'Permiso administrativo'
+                    c1: T.C_PRIMARY_LIGHT
+                    c2: T.C_PRIMARY
+                QuickActionCard:
+                    icon_name: 'camera'
+                    label_text: 'Subir Licencia'
+                    sub_text: 'Foto o PDF médico'
+                    c1: T.C_SECONDARY
+                    c2: T.C_PRIMARY_LIGHT
+
+            SectionLabel:
+                title: 'TAREAS PENDIENTES'
+                count: 2
+
+            MDBoxLayout:
+                id: pending_box
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(14)
+                # PendingCard x2 se agregan desde Python (son datos, no diseno)
+
+            SectionLabel:
+                title: 'LIQUIDACIONES RECIENTES'
+
+            GlassCard:
+                id: docs_card
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                radius: dp(22)
+                padding: dp(16), dp(6)
+                MDBoxLayout:
+                    size_hint_y: None
+                    height: dp(38)
+                    spacing: dp(6)
+                    MDBoxLayout:
+                        spacing: dp(5)
+                        Icon:
+                            name: 'check'
+                            color: T.rgba(T.EMERALD)
+                            size_hint: None, None
+                            size: dp(13), dp(13)
+                            pos_hint: {'center_y': .5}
+                        Txt:
+                            text: 'Disponibles sin conexión'
+                            font_size: sp(9.5)
+                            text_color: T.rgba(T.EMERALD)
+                            size_hint_x: None
+                            width: dp(140)
+                        MDWidget:
+                    MDBoxLayout:
+                        spacing: dp(5)
+                        MDWidget:
+                        Icon:
+                            name: 'pin'
+                            color: T.C_SECONDARY
+                            size_hint: None, None
+                            size: dp(13), dp(13)
+                            pos_hint: {'center_y': .5}
+                        Txt:
+                            text: 'Fijados al dispositivo'
+                            font_size: sp(9.5)
+                            text_color: T.C_SECONDARY
+                            size_hint_x: None
+                            width: dp(112)
+                Divider:
+                    size_hint_y: None
+                    height: dp(1)
+                MDBoxLayout:
+                    id: docs_box
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    # DocRow x4 se agregan desde Python (son datos, no diseno)
+
+            MDBoxLayout:
+                id: extra_box
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                # DesktopCtaCard opcional (SHOW_DESKTOP_CTA), agregado desde Python
+
+    FooterCard:
+        id: footer
+        size_hint: 1, None
+        height: dp(64)
+        pos_hint: {'x': 0, 'y': 0}
