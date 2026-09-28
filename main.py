@@ -39,11 +39,11 @@ from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.properties import (BooleanProperty, ListProperty, NumericProperty,
                              StringProperty)
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 
 # ── KivyMD ──────────────────────────────────────────────────────────────────
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.floatlayout import MDFloatLayout
 
 import theme as T
 from widgets import GlassCard, MeshBackground, Pressable, PressCard
@@ -117,7 +117,7 @@ class PendingCard(GlassCard):
 
     def sign_pressed(self):
         """El .kv llama esto con on_release: root.sign_pressed()."""
-        MDApp.get_running_app().open_modal(self.doc_type, self.title,
+        MDApp.get_running_app().go_to_sign(self.doc_type, self.title,
                                            self.deadline, self.pages)
 
 
@@ -138,38 +138,61 @@ class DocRow(Pressable, MDBoxLayout):
 class FooterCard(GlassCard):
     """Barra inferior fija 'Firma sin iniciar sesión'."""
     def sign_pressed(self):
+        if not PENDING:
+            return
         d = PENDING[0]
-        MDApp.get_running_app().open_modal(d['doc_type'], d['title'],
+        MDApp.get_running_app().go_to_sign(d['doc_type'], d['title'],
                                            d['deadline'], d['pages'])
 
 
 class DesktopCtaCard(GlassCard):
     """Tarjeta oscura '¿No iniciaste sesión?' (solo si SHOW_DESKTOP_CTA)."""
     def sign_pressed(self):
+        if not PENDING:
+            return
         d = PENDING[0]
-        MDApp.get_running_app().open_modal(d['doc_type'], d['title'],
+        MDApp.get_running_app().go_to_sign(d['doc_type'], d['title'],
                                            d['deadline'], d['pages'])
 
 
-# ============================================================ MODAL DE FIRMA
-class SignatureModal(GlassCard):
+# =============================================================== TARJETA DE FIRMA
+class SignPanel(GlassCard):
     """
-    Tarjeta del modal 'Firmar con 1 toque'.
-    Todo el "cascaron" (encabezado, pestañas, boton CTA, disclaimer) esta en
-    la regla <SignatureModal>: de interfazrrhh.kv. Aqui solo vive la logica:
-    cambiar de pestaña, validar el RUT, reaccionar al dibujo de la firma y
-    mostrar la pantalla de exito — el equivalente a
+    Tarjeta 'Firmar con 1 toque' (encabezado, pestañas, boton CTA,
+    disclaimer). Todo el "cascaron" esta en la regla <SignPanel>: de
+    interfazrrhh.kv. Aqui solo vive la logica: cambiar de pestaña, validar
+    el RUT, reaccionar al dibujo de la firma — el equivalente a
     "on_press: root.guardar_datos()" de la diapositiva de eventos.
+
+    Vive dentro de SignScreen, una pantalla real del ScreenManager: al
+    firmar ya NO se sustituye a si misma por una pantalla de exito (como
+    hacia el modal original alternando 'chrome'/'body'); en su lugar le
+    pide a la app que navegue a la pantalla 'success' (ver sign()).
     """
     doc_type = StringProperty('')
     title = StringProperty('')
     deadline = StringProperty('')
     pages = NumericProperty(0)
     tab = StringProperty('rut')
-    HEIGHTS = {'rut': dp(388), 'draw': dp(476), 'done': dp(300)}
+    HEIGHTS = {'rut': dp(388), 'draw': dp(476)}
 
     def on_kv_post(self, base_widget):
+        self._rut_valid = False
+        self._has_signature = False
         self.height = self.HEIGHTS['rut']
+        self.set_tab('rut', animate=False)
+
+    def reset_for(self, doc_type, title, deadline, pages):
+        """Carga un documento nuevo y vuelve al estado inicial (pestaña RUT,
+        boton deshabilitado). Lo llama SignScreen cada vez que se entra a
+        la pantalla, para que un documento firmado antes no deje su RUT o
+        su firma dibujada visibles en el siguiente."""
+        self.doc_type = doc_type
+        self.title = title
+        self.deadline = deadline
+        self.pages = pages
+        self._rut_valid = False
+        self._has_signature = False
         self.set_tab('rut', animate=False)
 
     # ------------------------------------------------------------- pestanas
@@ -184,6 +207,14 @@ class SignatureModal(GlassCard):
             else:
                 btn.md_bg_color = target
             btn.fg_color = T.C_PRIMARY if active else T.C_SECONDARY
+
+        # El contenido de la pestaña se reconstruye desde cero, asi que su
+        # validez tambien: sin este reinicio, el boton "Firmar" quedaba
+        # habilitado al volver a una pestaña cuyo campo ya se ve vacio.
+        if tab == 'rut':
+            self._rut_valid = False
+        else:
+            self._has_signature = False
 
         self.ids.content.clear_widgets()
         if tab == 'rut':
@@ -232,42 +263,46 @@ class SignatureModal(GlassCard):
 
     # --------------------------------------------------------------- firmar
     def sign(self):
-        """Muestra la pantalla de exito. Solo visual: no firma nada real."""
-        self.ids.chrome.opacity = 0
-        self.ids.content.opacity = 0
-        Animation.cancel_all(self, 'height')
-        Animation(height=self.HEIGHTS['done'], d=0.24, t='out_quad').start(self)
-
-        success = Factory.SuccessContent()
-        success.doc_title = self.title
-        success.ids.close_btn.bind(on_release=lambda *a: self.close())
-        self.ids.body.add_widget(success)
-        success.opacity = 0
-        Animation(opacity=1, d=0.22, t='out_quad').start(success)
+        """Solo visual: no firma nada real. Navega a la pantalla de exito."""
+        MDApp.get_running_app().go_to_success(self.title)
 
     # --------------------------------------------------------------- cerrar
     def close(self):
-        MDApp.get_running_app().close_modal()
+        MDApp.get_running_app().go_home()
 
 
-class ModalOverlay(MDFloatLayout):
-    """
-    Fondo oscuro + contenedor del SignatureModal (ver <ModalOverlay>: en el
-    .kv para el rectangulo oscuro). Tocar fuera de la tarjeta cierra el
-    modal, igual que el prototipo web original.
-    """
-    def on_touch_down(self, touch):
-        if super().on_touch_down(touch):
-            return True
-        if self.get_root_window() and not self.ids.modal.collide_point(*touch.pos):
-            MDApp.get_running_app().close_modal()
-            return True
-        return True
+# ============================================================ PANTALLAS (SCREENS)
+# Las 3 pantallas navegables que exige la maqueta: Inicio, Firmar y Exito.
+# Cada una es una kivy.uix.screenmanager.Screen; el ScreenManager (creado en
+# InterfazRRHHApp.build()) las muestra/oculta con una transicion animada al
+# cambiar 'sm.current'. El diseno de cada pantalla vive en su regla
+# <XScreen>: de interfazrrhh.kv -- aqui solo la logica de navegacion.
+
+class HomeScreen(Screen):
+    """Pantalla 'Inicio': envuelve el tablero (RootScreen) sin logica propia."""
+    pass
+
+
+class SignScreen(Screen):
+    """Pantalla 'Firmar': aloja el SignPanel con los datos del documento
+    elegido en Inicio."""
+    def load_document(self, doc_type, title, deadline, pages):
+        self.ids.panel.reset_for(doc_type, title, deadline, pages)
+
+
+class SuccessScreen(Screen):
+    """Pantalla 'Exito': confirma la firma y vuelve a Inicio."""
+    doc_title = StringProperty('')
+
+    def close(self):
+        MDApp.get_running_app().go_home()
 
 
 # ------------------------------------------------------------------- ROOT
 class RootScreen(MeshBackground):
-    """Contenedor raiz. Puebla las listas dinamicas (datos, no diseno)."""
+    """Contenido del tablero (Inicio). Puebla las listas dinamicas (datos,
+    no diseno). No es la Screen en si -- HomeScreen la envuelve en el .kv --
+    para poder reutilizar tal cual toda la logica de animacion de entrada."""
 
     def on_kv_post(self, base_widget):
         for doc in PENDING:
@@ -314,37 +349,46 @@ class InterfazRRHHApp(MDApp):
 
         Window.size = (420, 880)
         Window.clearcolor = T.rgba(T.BG)
-        self.root_screen = RootScreen()
-        self.modal = None
-        return self.root_screen
 
-    def open_modal(self, doc_type, title, deadline, pages):
-        if self.modal:
-            return
-        overlay = Factory.ModalOverlay()
-        overlay.ids.modal.doc_type = doc_type
-        overlay.ids.modal.title = title
-        overlay.ids.modal.deadline = deadline
-        overlay.ids.modal.pages = pages
-        self.modal = overlay
-        self.root_screen.add_widget(overlay)
-        overlay.opacity = 0
-        Animation(opacity=1, d=0.16, t='out_quad').start(overlay)
+        # ScreenManager con las 3 pantallas navegables de la maqueta:
+        # Inicio (tablero) -> Firmar (RUT / dibujar firma) -> Exito.
+        # Cada pantalla se crea una sola vez y persiste durante toda la
+        # sesion; navegar solo cambia cual esta visible (sm.current), no
+        # crea ni destruye widgets como hacia el modal original.
+        self.sm = ScreenManager()
+        self.home_screen = HomeScreen(name='home')
+        self.sign_screen = SignScreen(name='sign')
+        self.success_screen = SuccessScreen(name='success')
+        for screen in (self.home_screen, self.sign_screen, self.success_screen):
+            self.sm.add_widget(screen)
+        return self.sm
 
-    def close_modal(self):
-        if not self.modal:
-            return
-        overlay, self.modal = self.modal, None
-        anim = Animation(opacity=0, d=0.16, t='in_quad')
-        anim.bind(on_complete=lambda *a: self.root_screen.remove_widget(overlay))
-        anim.start(overlay)
+    # --------------------------------------------------------- navegacion
+    def go_to_sign(self, doc_type, title, deadline, pages):
+        """Inicio -> Firmar. Llamado desde 'Firmar con 1 toque' / 'Firmar'."""
+        self.sign_screen.load_document(doc_type, title, deadline, pages)
+        self.sm.transition = SlideTransition(direction='left')
+        self.sm.current = 'sign'
+
+    def go_to_success(self, doc_title):
+        """Firmar -> Exito. Llamado por SignPanel.sign()."""
+        self.success_screen.doc_title = doc_title
+        self.sm.transition = SlideTransition(direction='up')
+        self.sm.current = 'success'
+
+    def go_home(self):
+        """Firmar o Exito -> Inicio. Cierra el flujo de firma sin guardar
+        nada (la maqueta no persiste datos)."""
+        direction = 'down' if self.sm.current == 'success' else 'right'
+        self.sm.transition = SlideTransition(direction=direction)
+        self.sm.current = 'home'
 
 
 # Factory se usa para (a) instanciar desde Python las clases dinamicas
-# declaradas con "@Base" en el .kv (RutTabContent, DrawTabContent,
-# SuccessContent), y (b) para que el .kv pueda encontrar por nombre las
-# clases definidas en widgets.py y en este archivo. Kivy no las detecta
-# solo con el "import"; hay que registrarlas explicitamente.
+# declaradas con "@Base" en el .kv (RutTabContent, DrawTabContent), y
+# (b) para que el .kv pueda encontrar por nombre las clases definidas en
+# widgets.py y en este archivo. Kivy no las detecta solo con el "import";
+# hay que registrarlas explicitamente.
 from kivy.factory import Factory  # noqa: E402  (al final para evitar ciclos)
 import widgets as _w  # noqa: E402
 
@@ -354,7 +398,7 @@ for _cls in (_w.GlassCard, _w.DashedPanel, _w.PressCard, _w.GradientTile,
              _w.MeshBackground,
              StatCard, QuickActionCard, SectionLabel, HeaderCard,
              PendingCard, DocRow, FooterCard, DesktopCtaCard,
-             SignatureModal, ModalOverlay, RootScreen):
+             SignPanel, HomeScreen, SignScreen, SuccessScreen, RootScreen):
     Factory.register(_cls.__name__, cls=_cls)
 
 
