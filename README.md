@@ -31,6 +31,13 @@ directos.
 |---|---|---|---|
 | ![Inicio](assets/screenshots/01_inicio.png) | ![Firmar con RUT](assets/screenshots/02_firmar_rut.png) | ![Dibujar firma](assets/screenshots/03_firmar_dibujo.png) | ![Firmado con éxito](assets/screenshots/04_exito.png) |
 
+## Fundamentación UX/UI
+
+El diseño y la estructura de pantallas se basan en una encuesta de
+diagnóstico real (11 respuestas) al socio comunitario y usuarios objetivo.
+Metodología, hallazgos con evidencia y la matriz hallazgo → decisión de
+diseño están en [`FUNDAMENTACION-UX-UI.md`](FUNDAMENTACION-UX-UI.md).
+
 ## Declaración de uso de IA
 
 Se usó IA (Claude / Claude Code) para analizar el proyecto, corregir errores
@@ -42,17 +49,18 @@ qué se cambió y por qué — está documentado en [`uso_ia.md`](uso_ia.md).
 
 ```
 FirmApp/
-├── main.py               <- SOLO clases y lógica (hereda de MDApp)
-│                             ScreenManager + 3 pantallas: Inicio, Firmar, Éxito
-├── interfazrrhh.kv       <- TODO el diseño visual (componentes KivyMD)
-├── widgets.py            <- Clases base sobre MDBoxLayout / MDCard / MDTextField
-├── icons.py              <- Los iconos SVG del diseño, redibujados para Kivy
-├── theme.py              <- Colores y tipografías
+├── main.py                    <- SOLO clases y lógica (hereda de MDApp)
+│                                  ScreenManager + 3 pantallas: Inicio, Firmar, Éxito
+├── interfazrrhh.kv            <- TODO el diseño visual (componentes KivyMD)
+├── widgets.py                 <- Clases base sobre MDBoxLayout / MDCard / MDTextField
+├── icons.py                   <- Los iconos SVG del diseño, redibujados para Kivy
+├── theme.py                   <- Colores y tipografías
 ├── requirements.txt
-├── uso_ia.md             <- Declaración de uso de IA (este proyecto)
+├── FUNDAMENTACION-UX-UI.md    <- Investigación de usuarios y matriz hallazgo → decisión
+├── uso_ia.md                  <- Declaración de uso de IA (este proyecto)
 └── assets/
-    ├── fonts/             <- DMSans_18pt-{Regular,Bold}.ttf, JetBrainsMono-Regular.ttf
-    └── screenshots/        <- Capturas usadas en este README
+    ├── fonts/                  <- DMSans_18pt-{Regular,Bold}.ttf, JetBrainsMono-Regular.ttf
+    └── screenshots/             <- Capturas usadas en este README
 ```
 
 ## Navegación (ScreenManager)

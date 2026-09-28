@@ -30,6 +30,15 @@ aplica)".
    - identificar si el proyecto usa `ScreenManager`,
    - revisar la rúbrica de evaluación (`.docx` adjunto) y hacer los cambios
      necesarios para cumplir sus requisitos.
+3. **"Revisa y analiza todo el repositorio y comprueba que todo esté bien"**
+   (tras fusionarse el PR #1 a `main` y renombrarse la rama) — verificación
+   de que el merge no rompió nada: sin marcadores de conflicto, archivos
+   `.py`/`.kv` compilan, y la app recorre las 3 pantallas sin errores.
+4. **"Incluye este archivo [`FUNDAMENTACION-UX-UI.md`] y actualiza todo en
+   el repositorio"** — incorporar el documento de fundamentación UX/UI que
+   el estudiante redactó con su propia investigación, y actualizar
+   `README.md` y este archivo para reflejarlo (ver sección "Actualización —
+   `FUNDAMENTACION-UX-UI.md`" más abajo).
 
 ## Qué encontró el análisis inicial
 
@@ -114,24 +123,35 @@ Se completó con las secciones que exige la rúbrica y que faltaban:
 la sección de estructura de archivos y se agregó la sección "Navegación
 (ScreenManager)".
 
-## Qué NO se generó con IA (y por qué)
+## Actualización — `FUNDAMENTACION-UX-UI.md` (commit "Archivo fundamentacion ux-ui")
 
-La rúbrica exige además un documento `FUNDAMENTACION-UX-UI.md` con
-metodología de investigación, hallazgos con **citas textuales reales** de
-entrevistas/encuestas a usuarios, y una matriz hallazgo → decisión de
-diseño. **Ese documento no fue creado en esta sesión**: requiere datos
-primarios reales (entrevistas y encuestas que el estudiante debe haber
-aplicado a su socio comunitario/usuarios), y no existe ese material en este
-repositorio ni fue provisto en la conversación. Inventar citas o porcentajes
-de usuarios inexistentes sería presentar evidencia falsa como si fuera
-investigación real, algo que la IA no debe hacer. **Queda pendiente que el
-estudiante complete `FUNDAMENTACION-UX-UI.md` con su propia investigación**
-(criterio A de la rúbrica, 30 % de la nota).
+En una sesión posterior, el estudiante entregó el documento
+`FUNDAMENTACION-UX-UI.md` ya redactado, con su propia investigación
+(encuesta de diagnóstico en Google Forms, 11 respuestas). La IA **no generó
+ni modificó ese contenido**: solo lo incorporó al repositorio tal como se
+entregó (`git add` + commit) y actualizó las referencias cruzadas en
+`README.md` (sección "Fundamentación UX/UI" y estructura de archivos) para
+enlazarlo.
+
+Al incorporarlo se detectó una inconsistencia que **no se corrigió
+automáticamente** (por no alterar el contenido del estudiante sin
+pedírselo): la matriz hallazgo → decisión (sección 3) y la justificación de
+navegación (sección 4) del documento nombran pantallas `PantallaInicio`,
+`PantallaFormulario` y `PantallaEstado`, pero las clases reales en
+`main.py`/`interfazrrhh.kv` se llaman `HomeScreen`, `SignScreen` y
+`SuccessScreen`. Además, `PantallaFormulario` describe un formulario de
+solicitud de permisos/vacaciones (hallazgo H4) que **no está implementado**
+todavía como pantalla navegable — las tarjetas "Pedir Vacaciones" y
+"Solicitar Permiso" del dashboard hoy no tienen acción asociada. Queda a
+criterio del estudiante ajustar los nombres de pantalla en el documento
+para que coincidan con el código, o implementar esa pantalla de
+formulario, antes de presentar (el criterio A3 de la rúbrica exige que la
+matriz trace decisiones reales del código).
 
 ## Qué revisó la IA de la rúbrica y no alcanzó a resolver
 
-- Criterio A (Fundamentación UX/UI, 30 pts): pendiente, por el motivo
-  anterior.
+- Criterio A (Fundamentación UX/UI, 30 pts): el documento ya existe y fue
+  incorporado; ver la nota de inconsistencia de nombres de pantalla arriba.
 - Criterio D (presentación oral, 15 pts): no aplica a un cambio de código;
   es responsabilidad del estudiante al exponer.
 
